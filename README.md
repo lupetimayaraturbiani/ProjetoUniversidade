@@ -171,7 +171,7 @@ No arquivo `pom.xml`, inclua:
 ---
 
 ## 👩‍💻 Autoria
-Projeto desenvolvido por **Mayara Lupeti Turbiani**  
+Projeto desenvolvido por **integrantes do projeto**  
 Para o Trabalho Prático – **Modelagem e Implementação de Relacionamentos em Aplicações Spring Boot**  
-💡 Disciplina: *Programação Orientada a Objetos / Engenharia de Software*  
+💡 Disciplina: *Desenvolvimento de Sistemas Web*  
 📅 Ano: 2025
