@@ -1,17 +1,20 @@
 package com.example.service;
 
-import com.example.model.Endereco;
-import com.example.repository.EnderecoRepository;
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import com.example.model.Endereco;
+import com.example.repository.EnderecoRepository;
 
 @Service
 public class EnderecoService {
     private final EnderecoRepository enderecoRepository;
+    private final RabbitMQPublisher rabbitMQPublisher;
 
-    public EnderecoService(EnderecoRepository enderecoRepository) {
+    public EnderecoService(EnderecoRepository enderecoRepository, RabbitMQPublisher rabbitMQPublisher) {
         this.enderecoRepository = enderecoRepository;
+        this.rabbitMQPublisher = rabbitMQPublisher;
     }
 
     public List<Endereco> listarTodos() {
@@ -23,7 +26,19 @@ public class EnderecoService {
     }
 
     public Endereco cadastrar(Endereco endereco) {
-        return enderecoRepository.save(endereco);
+        Endereco enderecoSalvo = enderecoRepository.save(endereco);
+        // Envia mensagem ao RabbitMQ quando endereço é criado
+        try {
+            rabbitMQPublisher.publishEntityCreated(
+                enderecoSalvo.getId(),
+                "Endereco",
+                enderecoSalvo.getRua() + ", " + enderecoSalvo.getCidade() + " - " + enderecoSalvo.getEstado()
+            );
+        } catch (Exception e) {
+            // Log erro mas não falha a criação do endereço
+            System.err.println("Erro ao publicar evento de criação de Endereço: " + e.getMessage());
+        }
+        return enderecoSalvo;
     }
 
     public Endereco atualizar(Long id, Endereco endereco) {

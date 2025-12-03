@@ -1,16 +1,19 @@
 package com.example.service;
 
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
 import com.example.model.Aluno;
 import com.example.repository.AlunoRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.stereotype.Service;
-import java.util.List;
 @Service
 public class AlunoService {
     private final AlunoRepository alunoRepository;
+    private final RabbitMQPublisher rabbitMQPublisher;
 
-    public AlunoService(AlunoRepository alunoRepository) {
+    public AlunoService(AlunoRepository alunoRepository, RabbitMQPublisher rabbitMQPublisher) {
         this.alunoRepository = alunoRepository;
+        this.rabbitMQPublisher = rabbitMQPublisher;
     }
 
     public List<Aluno> listarTodos() {
@@ -18,7 +21,19 @@ public class AlunoService {
     }
 
     public Aluno cadastrar(Aluno aluno) {
-        return alunoRepository.save(aluno);
+        Aluno alunoSalvo = alunoRepository.save(aluno);
+        // Envia mensagem ao RabbitMQ quando aluno é criado
+        try {
+            rabbitMQPublisher.publishEntityCreated(
+                alunoSalvo.getId(),
+                "Aluno",
+                alunoSalvo.getNome() + " (matricula: " + alunoSalvo.getMatricula() + ")"
+            );
+        } catch (Exception e) {
+            // Log erro mas não falha a criação do aluno
+            System.err.println("Erro ao publicar evento de criação de Aluno: " + e.getMessage());
+        }
+        return alunoSalvo;
     }
 
     public Aluno buscarPorId(Long id) {
